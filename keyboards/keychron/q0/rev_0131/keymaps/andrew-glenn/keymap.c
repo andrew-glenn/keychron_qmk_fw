@@ -21,6 +21,7 @@
 enum layers {
     BASE,
     JETBRAINS,
+    UTIL,
 };
 /*
  ROTARY | CIRCLE  | TRIANGE | SQUARE | X     |
@@ -33,19 +34,26 @@ enum layers {
 uint16_t key_timer;
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [BASE] = LAYOUT_numpad_6x5(
-        KC_MUTE,        KC_MEDIA_PLAY_PAUSE,        KC_MEDIA_NEXT_TRACK,          KC_NO,          KC_NO,
-        QK_BOOTLOADER,  KC_NO,                      KC_NO,                        KC_NO,          LSFT(KC_F12),
+        KC_MUTE,        KC_NO,                      KC_MPRV,                      KC_MNXT,        KC_MPLY,
+        LSG(KC_V),      KC_NO,                      KC_NO,                        KC_NO,          LSFT(KC_F12),
         KC_NO,          KC_NO,                      KC_NO,                        LSG(KC_H),      LSFT(KC_F11),
         KC_NO,          KC_NO,                      KC_NO,                        KC_NO,
         KC_NO,          KC_NO,                      KC_NO,                        KC_NO,          KC_KP_ENTER,
         TO(JETBRAINS),  KC_NO,                                                    KC_NO),
     [JETBRAINS] = LAYOUT_numpad_6x5(
-      KC_MUTE,        KC_TRNS,             KC_TRNS,             KC_NO,                         KC_NO,
+      KC_MUTE,        KC_TRNS,             KC_TRNS,             KC_TRNS,                       KC_TRNS,
       KC_NO,          HYPR(KC_A),        HYPR(KC_KP_SLASH), HYPR(KC_KP_ASTERISK),          HYPR(KC_KP_MINUS),
       KC_NO,          HYPR(KC_7),        HYPR(KC_8),        HYPR(KC_9),                    HYPR(KC_KP_PLUS),
       KC_NO,          HYPR(KC_4),        HYPR(KC_5),        HYPR(KC_6),
       KC_NO,          HYPR(KC_1),        HYPR(KC_2),        HYPR(KC_3),                    KC_TRNS,
-      TO(BASE),       HYPR(KC_0),                           HYPR(KC_KP_DOT)),
+      TO(UTIL),       HYPR(KC_0),                           HYPR(KC_KP_DOT)),
+    [UTIL] = LAYOUT_numpad_6x5(
+      KC_MUTE,        KC_NO,               KC_NO,               KC_NO,                         KC_NO,
+      KC_NO,          KC_NO,               KC_NO,               KC_NO,                         KC_NO,
+      KC_NO,          KC_NO,               KC_NO,               KC_NO,                         KC_NO,
+      KC_NO,          KC_NO,               KC_NO,               KC_NO,
+      QK_BOOTLOADER,  KC_NO,               KC_NO,               KC_NO,                         KC_NO,
+      TO(BASE),       KC_NO,                                    KC_NO),
 };
 
 void only_active_keys_leds(uint8_t led_min, uint8_t led_max, uint8_t x, uint8_t y, uint8_t z){
@@ -67,6 +75,12 @@ void only_active_keys_leds(uint8_t led_min, uint8_t led_max, uint8_t x, uint8_t 
 }
 
 
+void all_keys_leds(uint8_t led_min, uint8_t led_max, uint8_t x, uint8_t y, uint8_t z){
+  for (uint8_t index = led_min; index < led_max; ++index) {
+    rgb_matrix_set_color(index, x, y, z);
+  }
+}
+
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
   switch (get_highest_layer(layer_state)){
     case BASE:
@@ -74,6 +88,9 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
       break;
     case JETBRAINS:
       only_active_keys_leds(led_min, led_max, 51,255,51);
+      break;
+    case UTIL:
+      all_keys_leds(led_min, led_max, 255, 0, 0);
       break;
     default:
       break;
@@ -95,19 +112,14 @@ bool tap_hold(keyrecord_t* record, uint16_t tapkey, uint16_t holdkey){
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t* record) {
-  switch(get_highest_layer(layer_state)){
-    case BASE:
-      switch (keycode) {
-        case KC_MUTE:
-          return tap_hold(record, LSG(KC_SPACE), KC_MUTE);
-        case KC_KP_ENTER:
-          return tap_hold(record, S(KC_F10), KC_Q);
+  switch (keycode) {
+    case KC_MUTE:
+      return tap_hold(record, LSG(KC_SPACE), KC_MUTE);
+    case KC_KP_ENTER:
+      if (get_highest_layer(layer_state) == BASE) {
+        return tap_hold(record, S(KC_F10), KC_Q);
       }
-    case JETBRAINS:
-      switch (keycode) {
-        case KC_MUTE:
-          return tap_hold(record, LSG(KC_SPACE), KC_MUTE);
-      }
+      break;
   }
   return true;
 }
@@ -116,6 +128,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t* record) {
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][2] = {
     [BASE] =      { ENCODER_CCW_CW(KC_VOLD, KC_VOLU) },
     [JETBRAINS] = { ENCODER_CCW_CW(KC_VOLD, KC_VOLU) },
+    [UTIL] =      { ENCODER_CCW_CW(KC_VOLD, KC_VOLU) },
    // [FUNC] = { ENCODER_CCW_CW(RGB_VAD, RGB_VAI) },
 };
 #endif
